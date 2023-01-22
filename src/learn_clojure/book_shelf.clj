@@ -13,6 +13,8 @@
 
 (defn solved? [state] (= goal state))
 
+(defn lost? [_] false)
+
 (defn valid-state? [{:keys [green-indices empty-index]}]
   (and
     (set? green-indices)
@@ -42,4 +44,4 @@
         )
     index))
 
-(def BookShelf (solver/->Puzzle initial-state solved? moves move))
+(def BookShelf (solver/->Puzzle initial-state solved? lost? moves move))

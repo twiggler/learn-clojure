@@ -23,7 +23,9 @@
     (or (= (:w2 state) 0) (= (:w2 state) 2))
     (or (= (:b1 state) 5) (= (:b1 state) 9))
     (or (= (:b2 state) 5) (= (:b2 state) 9))))
+
+(defn lost? [_] false)
 (defn move [state {:keys [piece _ to]}]
   ->KnightPositions (assoc state piece to))
 
-(def Knights (solver/->Puzzle initial-state solved? (partial board/moves jumps) move))
+(def Knights (solver/->Puzzle initial-state solved? lost? (partial board/moves jumps) move))

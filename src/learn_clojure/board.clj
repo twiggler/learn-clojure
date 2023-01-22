@@ -1,7 +1,10 @@
 (ns learn-clojure.board
-  (:require [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [learn-clojure.solver :as solver]))
 
-(defrecord Move [piece from to])
+(defrecord Move [piece from to]
+  solver/Move
+  (negate [this] (->Move (:piece this) (:to this) (:from this))))
 
 (defn transitions [edges]
   (let [
