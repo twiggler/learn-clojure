@@ -13,22 +13,28 @@
 
 (defn solved? [state]
   (and
-    (or (= (:w1 state) 1) (= (:w1 state) 7))
-    (or (= (:w2 state) 1) (= (:w2 state) 7))
-    (or (= (:b1 state) 5) (= (:b1 state) 3))
-    (or (= (:b2 state) 5) (= (:b2 state) 3))))
+   (or (= (:w1 state) 1) (= (:w1 state) 7))
+   (or (= (:w2 state) 1) (= (:w2 state) 7))
+   (or (= (:b1 state) 5) (= (:b1 state) 3))
+   (or (= (:b2 state) 5) (= (:b2 state) 3))))
+
+(defn count-moves [context]
+  (->>
+   (:history context)
+   (map :piece)
+   (partition 2 1 [0])
+   (reduce (fn [agg [first second]] (if (not= first second) (inc agg) agg)) 1)))
 
 (defn lost? [context]
-  (->>
-    (:history context)
-    (map :piece)
-    (partition 2 1 [0])
-    (reduce (fn [agg [first second]] (if (not= first second) (inc agg) agg)) 1)
-    (< 7)))
+  (< (count-moves context) 7))
 
-(defn visited? [_] false)
+(defrecord SpiderScribe [contexts]
+  solver/Scribe
+  (visited? [this context]
+    (if-let [min-number-of-moves (get-in this [:contexts context])] (<= min-number-of-moves (count-moves context)) false))
+  (push [this context] (update-in this [:contexts context] (fnil (partial min (count-moves context)) 10))))
 
-(defn move [state {:keys [piece _ to] :as m}]
-  map->SpiderPositions (assoc state piece to))
+(defn move [state {:keys [piece _ to]}]
+  (assoc state piece to))
 
-(def Spiders (solver/->Puzzle initial-state solved? lost? visited? (partial board/moves routes) move))
+(def Spiders (solver/->Puzzle initial-state solved? lost? (->SpiderScribe {}) (partial board/moves routes) move))

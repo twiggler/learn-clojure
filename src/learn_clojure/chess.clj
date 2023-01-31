@@ -28,4 +28,4 @@
 (defn move [state {:keys [piece _ to]}]
   ->KnightPositions (assoc state piece to))
 
-(def Knights (solver/->Puzzle initial-state solved? lost? (partial board/moves jumps) move))
+(def Knights (solver/->Puzzle initial-state solved? lost? (solver/make-state-scribe) (partial board/moves jumps) move))

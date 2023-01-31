@@ -3,6 +3,10 @@
 
 (defrecord Shelf [green-indices empty-index])
 
+(defrecord Move [index empty-index]
+  solver/Move
+  (negate [this] (->Move (:empty-index this) (:index this))))
+
 ; red green red green red green red green empty empty
 (def initial-state
   (->Shelf #{1 3 5 7} 8))
@@ -32,9 +36,11 @@
     green-indices))
 
 (defn moves [{:keys [empty-index]}]
-  (remove #{empty-index (inc empty-index)} (range 9)))
+  (->> (range 9)
+       (remove #{empty-index (inc empty-index)})
+       (map #(->Move % empty-index))))
 
-(defn move [{:keys [green-indices empty-index]} index]
+(defn move [{:keys [green-indices empty-index]} {:keys [index]}]
   {:pre  [(<= 0 index 8)]
    :post [(valid-state? %) (= (:empty-index %) index)]}
   (->Shelf
@@ -44,4 +50,4 @@
         )
     index))
 
-(def BookShelf (solver/->Puzzle initial-state solved? lost? moves move))
+(def BookShelf (solver/->Puzzle initial-state solved? lost? (solver/make-state-scribe) moves move))
