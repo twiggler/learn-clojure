@@ -1,6 +1,5 @@
 (ns learn-clojure.plates
   (:require
-    [clojure.set :as set]
     [learn-clojure.solver :as solver]))
 
 (def initial-state (into [] (range 0 10)))
@@ -12,21 +11,32 @@
   solver/Move
   (negate [this] (->Move (:to this) (:from this))))
 
-(defn plate-move [plate-positions start-position step]
-  (loop [position start-position total-plates-passed 0]
-    (let [norm-step (if (neg? step) (+ 10 step) step)
-          next-position (mod (+ position norm-step) 10)
-          current-plates (count (filter #{next-position} plate-positions))]
-      (cond
-        (and (= total-plates-passed 2) (= current-plates 1)) (->Move start-position next-position)
-        (> total-plates-passed 2) nil
-        :else (recur next-position (+ total-plates-passed current-plates))))))
+(defn plate-move [plate-positions]
+  (let [single-start? (->> plate-positions
+                           (take 3)
+                           (apply distinct?))
+        end-triple (->> plate-positions
+                        (drop 3)
+                        (take 3))
+        single-end? (apply distinct? end-triple)
+        start-pos (nth plate-positions 1)
+        end-pos (nth end-triple 1)]
+    (if (and single-start? single-end?) (->Move start-pos end-pos))))
+
+(defn plate-moves [plate-positions]
+  (->> plate-positions
+       (cycle)
+       (drop 9)
+       (iterate (partial drop 1))
+       (take 10)
+       (keep plate-move)))
 
 (defn moves [plate-positions]
-  (->> (frequencies plate-positions)
-       (keep (fn [[k v]] (if (= v 1) k)))
-       (mapcat #(vector (plate-move plate-positions % 1) (plate-move plate-positions % -1)))
-       (remove nil?)))
+  (->> plate-positions
+       (sort)
+       ((juxt plate-moves (comp plate-moves reverse)))
+       (flatten)))
+
 
 (defn move [plate-positions {:keys [from to]}]
   (replace {from to} plate-positions))
